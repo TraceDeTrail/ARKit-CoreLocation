@@ -60,7 +60,23 @@ open class LocationAnnotationNode: LocationNode {
 
         addChildNode(annotationNode)
     }
-
+@available(iOS 10.0, *)
+    public init(location: CLLocation?, arview: ARView) {
+        let plane = SCNPlane(width: arview.frame.size.width / 100, height: arview.frame.size.height / 100)
+        plane.firstMaterial!.diffuse.contents = arview.renderAsImage()
+        plane.firstMaterial!.lightingModel = .constant
+        
+        annotationNode = AnnotationNode(view: arview, image: nil)
+        annotationNode.geometry = plane
+        
+        super.init(location: location)
+        
+        let billboardConstraint = SCNBillboardConstraint()
+        billboardConstraint.freeAxes = SCNBillboardAxis.Y
+        constraints = [billboardConstraint]
+        
+        addChildNode(annotationNode)
+    }
     required public init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
@@ -99,5 +115,14 @@ open class LocationAnnotationNode: LocationNode {
         SCNTransaction.commit()
 
         onCompletion()
+    }
+}
+@available(iOS 10.0, *)
+public class ARView: UIView {
+    func renderAsImage() -> UIImage {
+        let renderer = UIGraphicsImageRenderer(bounds: bounds)
+        return renderer.image { context in
+            layer.render(in: context.cgContext)
+        }
     }
 }
